@@ -2,54 +2,15 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 import requests
-import json
 from io import BytesIO
 import asyncio
+from constants.global_variable import *
+from services.product_services import ProductServices
+from models.product import Product
+from services.order_services import OrderServices
 
 coffee_drinks = []
-uri = 'http://172.23.33.232:3000'
-
-class Product:
-    def __init__(self, id, name, description, price, image_url):
-        self.id = id
-        self.name = name
-        self.description = description
-        self.price = price
-        self.image_url = image_url
-        self.var = None
-        self.tk_image = None
-
-# Function to fetch coffee drink data from the Node.js server asynchronously
-async def fetch_coffee_data_async():
-    try:
-        response = await loop.run_in_executor(None, lambda: requests.get(uri+"/api/monitor/get-products"))  # Replace with your actual API endpoint
-        response.raise_for_status()  # Check for any HTTP errors
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching data from the server: {e}")
-        return []
-    
-def placeOrder(id, quantity, total_price):
-    try:
-        requests.post(
-                uri+"/api/monitor/place-order",
-                headers={
-                    'Content-Type':'application/json; charset=UTF-8',
-                },
-                data=json.dumps({
-                    'id': id,
-                    'quantity': quantity,
-                    'totalPrice': total_price,
-                }),
-        ) 
         
-        # Simulate onSuccess logic
-        print("Order placed successfully")
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching data from the server: {e}")
-        return []
-        
-
 # Function to place an order
 def place_order():
     selected_drinks = []
@@ -61,7 +22,7 @@ def place_order():
             total_price += drink.price
 
     if len(selected_drinks) > 0:
-        placeOrder(drink.id,1,total_price)
+        OrderServices.placeOrder(drink.id,1,total_price)
         messagebox.showinfo("Order Placed", f"Your order has been placed! Total price: ${total_price:.2f}")
     else:
         messagebox.showwarning("No Selection", "Please select at least one drink.")
@@ -79,13 +40,11 @@ async def create_drink_widgets_async():
     loading_label = tk.Label(drinks_frame, text="Loading...")
     loading_label.grid(row=0, column=0)
 
-    product_data = await fetch_coffee_data_async()
+    product_data = await ProductServices.fetch_coffee_data_async()
 
     loading_label.destroy()  # Remove loading label once data is fetched
 
     for i, drink_data in enumerate(product_data):
-        image_url = drink_data.get("image_url", "https://res.cloudinary.com/dsx7eoho1/image/upload/v1707628461/Milk/rvqswc9zoaiydspujwvw.jpg")
-
         drink = Product(
             id = drink_data["_id"],
             name=drink_data["name"],

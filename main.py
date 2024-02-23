@@ -7,24 +7,6 @@ from feature.product.services.order_services import OrderServices
 from models.product import Product
 from feature.product.widgets.drink_tile import DrinkTile
 
-coffee_drinks = []
-        
-# Function to place an order
-def place_order():
-    selected_drinks = []
-    total_price = 0
-
-    for drink in coffee_drinks:
-        if drink.var.get() == 1:
-            selected_drinks.append(drink.name)
-            total_price += drink.price
-
-    if len(selected_drinks) > 0:
-        OrderServices.placeOrder(drink.id,1,total_price)
-        messagebox.showinfo("Order Placed", f"Your order has been placed! Total price: ${total_price:.2f}")
-    else:
-        messagebox.showwarning("No Selection", "Please select at least one drink.")
-
 # Function to create drink widgets
 async def create_drink_widgets_async():
     loading_label = tk.Label(drinks_frame, text="Loading...")
@@ -70,13 +52,13 @@ async def create_drink_widgets_async():
         # Use the DrinkTile class to create drink widgets
         DrinkTile(
             parent=frame,
+            drink_id = drink.id,
             drink_flavour=drink.name,
-            drink_price=f"${drink.price:.2f}",
+            drink_price=drink.price,
             drink_description=drink.description,
             drink_image=drink.image_url
         )
-
-        coffee_drinks.append(drink)
+        print(drink.image_url);
 
 # Create the main window
 window = tk.Tk()
@@ -93,12 +75,8 @@ drinks_frame = tk.Frame(window, bg="white")
 drinks_frame.pack(pady=10)
 
 # Create drink widgets asynchronously
-loop = asyncio.get_event_loop()
+loop = asyncio.get_event_loop()       
 loop.run_until_complete(create_drink_widgets_async())
-
-# Create place order button
-order_button = tk.Button(window, text="Place Order", command=place_order)
-order_button.pack(pady=10)
 
 # Run the application
 window.mainloop()
